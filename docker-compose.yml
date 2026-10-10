@@ -1,0 +1,30 @@
+services:
+
+  main_app:
+    build:
+      context: .
+    image: main_app_image
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  postgres:
+    image: postgres
+    container_name: shop-postgres
+    environment:
+      POSTGRES_DB: shop_db
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - postgres_data:/var/lib/postgresql/
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "shop", "-d", "shop_db"]
+      timeout: 5s
+      retries: 3
+      interval: 10s
+
+
+volumes:
+  postgres_data:
