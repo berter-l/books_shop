@@ -12,7 +12,8 @@ from handler import handle_not_found, handle_unique
 from security import get_hashed_password, get_jwt_tokens, is_password_correct
 
 
-def get_author_with_books(author_id: int, connection):
+def get_processed_author_with_books(author_id: int, connection):
+    """Получает данные об авторе и его книгах"""
     connection.execute("""BEGIN""")
     try:
         raw_books_data = get_books_by_author_id(
@@ -171,9 +172,8 @@ def login_author(email, password, connection):
 
 
 def is_author_exists(email: str, connection) -> bool:
+    """Проверяет существует ли автор в базе данных"""
     author = get_author_by_email(email, connection)
-
     if author is not None:
         return True
-
     return False

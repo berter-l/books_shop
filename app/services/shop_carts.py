@@ -8,7 +8,7 @@ from handler import handle_not_found, handle_foreign_key
 
 def add_product_to_cart(book_id: int, user_id: int, connection):
     """
-    Добавляет товар корзину пользователя.
+    Добавляет товар в корзину пользователя.
 
     Добавляет товар, в ещё не использованную для оформления заказа, корзину пользователя.
     Если корзины нету, то создаёт новую, активную корзину и добавляет в неё товар.
@@ -174,8 +174,7 @@ def build_cart_items_data_response(raw_cart_items_data):
 
     Raises:
         HTTPException:
-            - status_code=status.HTTP_404_NOT_FOUND, detail="Not found.", если данные о товарах в корзине
-              равны None.
+            - status_code=status.HTTP_404_NOT_FOUND, detail="Not found.", если данные о товарах в корзине, равны None.
     """
 
     processed_cart_items_data = []

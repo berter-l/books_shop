@@ -2,7 +2,6 @@ from fastapi import HTTPException
 
 from app.schemes.jwt import ResponseJWTTokensSchema
 from app.schemes.users import ResponseUserProfileSchema
-from app.services.orders import get_raw_orders_by_user_id
 from database import pool
 from handler import handle_not_found, handle_unique
 from security import get_hashed_password, get_jwt_tokens, is_password_correct
@@ -103,6 +102,18 @@ def login_user(email: str, password: str, connection):
 
 
 def is_user_exists(email: str, connection):
+    """
+    Проверяет, существует ли пользователь с таким email.
+
+    Args:
+        email: Почта, по которой ищем пользователя.
+        connection: Объект соединения для работы с базой данных
+
+    Returns:
+        - True, если пользователь найден.
+        - False, если пользователь не найден.
+    """
+
     user = get_raw_user_by_email(email, connection)
 
     if user is not None:

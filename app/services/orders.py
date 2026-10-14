@@ -5,7 +5,10 @@ from app.schemes.orders import (
     ResponseManyOrdersSchema,
     ResponseOrderBase,
 )
-from app.services.books import get_raw_books_by_list_of_id
+from app.services.books import (
+    get_raw_books_by_list_of_id,
+    update_data_number_of_books_in_stock,
+)
 from app.services.shop_carts import (
     get_active_cart,
     get_items_from_active_cart,
@@ -67,11 +70,19 @@ def place_an_order(user_id, connection):
 
         items = get_items_from_active_cart(cart_id, connection)
 
-        check_enough_books_to_place_an_order(items, connection)
+        books_id = [item[3] for item in items]  # Список id, по которым будут искаться книги.
+
+        number_of_books_in_cart = [item[2] for item in items]
+
+        check_enough_books_to_place_an_order(items, connection)  # Если книг на складе не хватает, то заказ не создается
 
         total_amount = sum([item[1] for item in items])
 
         save_order_to_db(user_id, cart_id, total_amount, connection)
+
+        update_data_number_of_books_in_stock(
+            books_id, number_of_books_in_cart, connection
+        )
 
         update_cart_status(cart_id, connection)
 
@@ -81,7 +92,6 @@ def place_an_order(user_id, connection):
         raise
 
     except:
-        raise
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Order creation failed",
@@ -93,14 +103,45 @@ def place_an_order(user_id, connection):
 
 
 def save_order_to_db(user_id: int, cart_id: int, total_amount: float, connection):
+    """
+    Сохраняет данные о заказе в БД.
+
+    Args:
+        user_id: ID пользователя чей заказ сохраняем.
+        cart_id: ID корзины, которая была использована для создания это заказа.
+        total_amount: Общая стоимость (в рублях), всех товаров из корзины.
+        connection: Объект соединения для работы с базой данных.
+
+    Returns:
+        None.
+    """
+
     connection.execute(
         """INSERT INTO orders(user_id, cart_id, total_amount)
            VALUES(%s, %s, %s)""",
         (user_id, cart_id, total_amount),
     )
 
+    return None
 
 def check_enough_books_to_place_an_order(cart_items_data, connection):
+    """
+    Проверяет, хватает ли книг на складе для оформления заказа.
+
+    Для каждой книги из корзины, проверяет, достаточно ли на складе экземляров для того, чтобы оформить заказ.
+
+    Args:
+        cart_items_data: Данные о книгах в корзине.
+        connection: Объект соединения для работы с базой данных.
+
+    Returns:
+        None.
+
+    Raises:
+        HTTPException:
+            - status_code=HTTP_409_CONFLICT, detail="сообщение о всех книгах, для которых на складе, не хватает экземляров.
+    """
+
     books_id = [item[3] for item in cart_items_data]
 
     books_data = get_raw_books_by_list_of_id(books_id, connection)
@@ -118,4 +159,4 @@ def check_enough_books_to_place_an_order(cart_items_data, connection):
             detail=", ".join(error_messages),
         )
 
-    return error_messages
+    return None

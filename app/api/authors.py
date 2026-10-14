@@ -10,7 +10,7 @@ from app.schemes.jwt import ResponseJWTTokensSchema
 from app.services.authors import (
     get_processed_authors_data,
     register_author as service_register_author,
-    get_author_with_books as service_get_author_with_books,
+    get_processed_author_with_books as service_get_author_with_books,
     get_processed_author_by_id,
     login_author as service_login_author,
 )
