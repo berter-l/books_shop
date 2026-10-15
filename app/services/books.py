@@ -181,7 +181,7 @@ def update_data_number_of_books_in_stock(
     books_id: list[int], books_count_in_cart: list[int], connection
 ):
     """
-    Обновляет количество книг, которые есть в наличие на складе.
+    Обновляет число книг, которые есть в наличие на складе.
 
     Args:
         books_id: список id книг, количичество которых нужно обновить.
@@ -200,7 +200,8 @@ def update_data_number_of_books_in_stock(
         rows_to_update.append(book_id)
         rows_to_update.append(book_count_in_cart)
 
-    # Динамически формируем sql запрос для обновления данных о количестве книг в наличие
+    # Динамически формируем sql запрос для обновления данных о количестве книг в наличие.
+    # Выполняем сформированный запрос.
     values_rows = ", ".join(["(%s, %s)"] * len(books_id))
     update_query = f"""
            UPDATE books AS bk

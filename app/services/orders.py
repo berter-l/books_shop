@@ -20,6 +20,20 @@ from handler import handle_not_found
 
 
 def get_raw_orders_by_user_id(user_id, connection, auto_return_to_pool=True):
+    """
+    Получает необработанные данные о заказах, для заданного пользователя.
+
+    Args:
+        user_id: ID пользователя чьи заказы нужно получить.
+        connection: Объект соединения для работы с БД.
+        auto_return_to_pool: Флаг, если True (по умолчанию), то функция вернёт соединение в пул сама, если False,
+         то соединение должна вернуть, вызывающая функция.
+
+    Returns:
+        - list[tuple], где tuple - отдельная запись из БД, если данные найдены.
+        - None, если данные не найдены.
+    """
+
     raw_orders_data = connection.execute(
         """SELECT id, total_amount, created_at, status FROM orders WHERE user_id = %s""",
         (user_id,),
@@ -32,6 +46,17 @@ def get_raw_orders_by_user_id(user_id, connection, auto_return_to_pool=True):
 
 
 def get_processed_user_orders(user_id: int, connection):
+    """
+    Возвращает обработанные данные о заказах, заданного пользователя.
+
+    Args:
+        user_id: ID пользователя, обработанные данные заказов, которого нужно получить.
+        connection: Объект соединения для работы с БД.
+
+    Returns:
+         - Возвращает объект ResponseManyOrdersSchema, с атрибутом orders, в котором хранятся объекты ResponseOrderBase.
+    """
+
     raw_orders_data = get_raw_orders_by_user_id(
         user_id, connection, auto_return_to_pool=False
     )
@@ -42,7 +67,24 @@ def get_processed_user_orders(user_id: int, connection):
 
 
 @handle_not_found
-def build_user_orders_data_response(raw_orders_data) -> list[ResponseOrderBase]:
+def build_user_orders_data_response(raw_orders_data: list[tuple]) -> list[ResponseOrderBase]:
+    """
+    Формирует объекты схемы для заказов пользователя.
+
+    Args:
+        raw_orders_data: Необработанные записи о заказах из БД, где tuple отдельная запись из БД.
+
+    Returns:
+        Возвращает список с ResponseOrderBase, где у каждого отдельного объекта есть атрибуты
+         (order_id - ID заказа в БД,
+         created_at - Полная дата, оформления заказа в формате ГГГГ-ММ-ДД:ЧЧ-ММ-СС,
+         status - Статус: "Готов" или "В пути",
+         total_amount - Общая сумма заказа в руб.)
+    Raises:
+        HTTPException:
+            - status_code=HTTP_404_NOT_FOUND, detail="Not found.", если данные, о заказах пользователя равны None.
+    """
+
     processed_orders = []
 
     for raw_order in raw_orders_data:
@@ -59,6 +101,24 @@ def build_user_orders_data_response(raw_orders_data) -> list[ResponseOrderBase]:
 
 
 def place_an_order(user_id, connection):
+    """
+    Оформляет заказ для заданного пользователя.
+
+    Управляет транзакцией: открывает и откатывает все изменения в случае ошибки, или сохраняет все изменения,
+    если всё хорошо.
+
+    Args:
+        user_id: ID пользователя, для которого оформляем заказ.
+        connection: Объект соединения для работы с БД.
+
+    Returns:
+        None.
+    Raises:
+        HTTPException:
+            - status_code=HTTP_404_NOT_FOUND, detail="Cart not found", если у пользователя нету корзины для оформления заказа
+            - status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Order creation failed", если возникает непредвиденная ошибка
+    """
+
     connection.execute("""BEGIN""")
     try:
         if not is_cart_exists(user_id, connection):
@@ -89,17 +149,19 @@ def place_an_order(user_id, connection):
         connection.execute("""COMMIT""")
 
     except HTTPException:
+        connection.execute("""ROLLBACK""")
         raise
 
     except:
+        connection.execute("""ROLLBACK""")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Order creation failed",
         )
 
     finally:
-        connection.execute("""ROLLBACK""")
         pool.putconn(connection)
+        return None
 
 
 def save_order_to_db(user_id: int, cart_id: int, total_amount: float, connection):
@@ -142,10 +204,12 @@ def check_enough_books_to_place_an_order(cart_items_data, connection):
             - status_code=HTTP_409_CONFLICT, detail="сообщение о всех книгах, для которых на складе, не хватает экземляров.
     """
 
-    books_id = [item[3] for item in cart_items_data]
+    books_id = [item[3] for item in cart_items_data]  # Список id книг из корзины пользователя.
 
     books_data = get_raw_books_by_list_of_id(books_id, connection)
 
+    #  Если количество книг на складе недостаточно,
+    #  то формируется сообщение об ошибке и добавляется в список.
     error_messages = []
     for item_data_from_cart, book_data_from_db in zip(cart_items_data, books_data):
         if item_data_from_cart[2] > book_data_from_db[3]:
