@@ -111,14 +111,14 @@ def get_processed_books_data(page: int, limit: int, connection):
 
 def create_book(title, price, count, author_id, connection):
     """
-    Создаёт запись о книге в таблице books
+    Создаёт запись о книге в таблице books.
 
     Args:
-        title: Название книги
-        price: Цена книги в рублях
-        count: Число книг, которые в наличие на складе
-        author_id: ID автора с которым будет связана данная книга
-        connection: Объект соединения для работы с базой данных
+        title: Название книги.
+        price: Цена книги в рублях.
+        count: Число книг, которые в наличие на складе.
+        author_id: ID автора с которым будет связана данная книга.
+        connection: Объект соединения для работы с базой данных.
 
     Returns:
         None.
@@ -139,11 +139,11 @@ def create_book(title, price, count, author_id, connection):
 
 def get_price_by_book_id(book_id: int, connection):
     """
-    Возвращает цену книги в рублях
+    Возвращает цену книги в рублях.
 
     Args:
-        book_id: ID книги, цену которой нужно вернуть
-        connection: connection: Объект соединения для работы с базой данных
+        book_id: ID книги, цену которой нужно вернуть.
+        connection: connection: Объект соединения для работы с базой данных.
 
     Returns:
         - Возвращает float объект, если книга существует.

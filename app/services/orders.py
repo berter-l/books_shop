@@ -47,7 +47,7 @@ def get_raw_orders_by_user_id(user_id, connection, auto_return_to_pool=True):
 
 def get_processed_user_orders(user_id: int, connection):
     """
-    Возвращает обработанные данные о заказах, заданного пользователя.
+    Возвращает обработанные данные о заказах, для заданного пользователя.
 
     Args:
         user_id: ID пользователя, обработанные данные заказов, которого нужно получить.
@@ -115,8 +115,8 @@ def place_an_order(user_id, connection):
         None.
     Raises:
         HTTPException:
-            - status_code=HTTP_404_NOT_FOUND, detail="Cart not found", если у пользователя нету корзины для оформления заказа
-            - status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Order creation failed", если возникает непредвиденная ошибка
+            - status_code=HTTP_404_NOT_FOUND, detail="Cart not found", если у пользователя нету корзины для оформления заказа.
+            - status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Order creation failed", если возникает непредвиденная ошибка.
     """
 
     connection.execute("""BEGIN""")
