@@ -107,6 +107,8 @@ def place_an_order(user_id, connection):
     Управляет транзакцией: открывает и откатывает все изменения в случае ошибки, или сохраняет все изменения,
     если всё хорошо.
 
+    Блокирует строки с книгами (во время проверки их количества на складе) до завершения транзакции.
+
     Args:
         user_id: ID пользователя, для которого оформляем заказ.
         connection: Объект соединения для работы с БД.
@@ -134,7 +136,7 @@ def place_an_order(user_id, connection):
 
         number_of_books_in_cart = [item[2] for item in items]
 
-        check_enough_books_to_place_an_order(items, connection)  # Если книг на складе не хватает, то заказ не создается
+        check_enough_books_to_place_an_order(items, books_id, connection)  # Если книг на складе не хватает, то заказ не создается
 
         total_amount = sum([item[1] for item in items])
 
@@ -186,7 +188,7 @@ def save_order_to_db(user_id: int, cart_id: int, total_amount: float, connection
 
     return None
 
-def check_enough_books_to_place_an_order(cart_items_data, connection):
+def check_enough_books_to_place_an_order(cart_items_data, books_id, connection):
     """
     Проверяет, хватает ли книг на складе для оформления заказа.
 
@@ -195,6 +197,7 @@ def check_enough_books_to_place_an_order(cart_items_data, connection):
     Args:
         cart_items_data: Данные о книгах в корзине.
         connection: Объект соединения для работы с базой данных.
+        books_id: список id книг чьё наличие на складе будет проверяться.
 
     Returns:
         None.
@@ -203,8 +206,6 @@ def check_enough_books_to_place_an_order(cart_items_data, connection):
         HTTPException:
             - status_code=HTTP_409_CONFLICT, detail="сообщение о всех книгах, для которых на складе, не хватает экземляров.
     """
-
-    books_id = [item[3] for item in cart_items_data]  # Список id книг из корзины пользователя.
 
     books_data = get_raw_books_by_list_of_id(books_id, connection)
 

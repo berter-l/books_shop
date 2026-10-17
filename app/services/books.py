@@ -161,6 +161,8 @@ def get_raw_books_by_list_of_id(list_of_id: list[int], connection):
     """
     Возвращает, только те, необработанные записи с данными о книгах, у которых id присутствует в list_of_id.
 
+    Ставит блокировку на найденные записи, до конца транзакции.
+
     Args:
         list_of_id: список id, только с этими id будут браться записи.
         connection: connection: Объект соединения для работы с базой данных.
@@ -170,7 +172,7 @@ def get_raw_books_by_list_of_id(list_of_id: list[int], connection):
     """
 
     raw_books_data = connection.execute(
-        """SELECT id, title, price, count FROM books WHERE id = ANY(%s)""",
+        """SELECT id, title, price, count FROM books WHERE id = ANY(%s) FOR UPDATE""",
         (list_of_id,),
     ).fetchall()
 
