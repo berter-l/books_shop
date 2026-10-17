@@ -45,14 +45,16 @@ def add_product_to_cart(book_id: int, user_id: int, connection):
         save_cart_item_to_db(book_id, user_id, cart_id, connection=connection)
 
         connection.execute("""COMMIT""")
+        pool.putconn(connection)
+
     except:
+        pool.putconn(connection)
         connection.execute("""ROLLBACK""")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error on server"
         )
 
     finally:
-        pool.putconn(connection)
         return None
 
 

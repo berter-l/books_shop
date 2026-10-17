@@ -32,7 +32,9 @@ def register_user(
             - status_code=HTTP_409_CONFLICT, detail="User already exists", если пользователь с такими данными уже существует.
     """
     if is_user_exists(email, connection):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User already exists"
+        )
 
     hashed_password = get_hashed_password(password)
 

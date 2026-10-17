@@ -120,7 +120,9 @@ def register_author(first_name, last_name, email, password, connection):
     """
 
     if is_author_exists(email, connection):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
+        )
 
     hashed_password = get_hashed_password(password)
 
@@ -325,8 +327,9 @@ def login_author(email, password, connection):
     if author is None:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
-    hashed_password = author[1].encode()  # Переводим в байты, т.к метод для проверки паролей работает только с ними.
-
+    hashed_password = author[
+        1
+    ].encode()  # Переводим в байты, т.к метод для проверки паролей работает только с ними.
 
     if is_password_correct(password.encode(), hashed_password):
         jwt_tokens = get_jwt_tokens({"author_id": author[0]})

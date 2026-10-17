@@ -1,3 +1,5 @@
+from time import sleep
+
 from fastapi import HTTPException
 from starlette import status
 
@@ -67,7 +69,9 @@ def get_processed_user_orders(user_id: int, connection):
 
 
 @handle_not_found
-def build_user_orders_data_response(raw_orders_data: list[tuple]) -> list[ResponseOrderBase]:
+def build_user_orders_data_response(
+    raw_orders_data: list[tuple],
+) -> list[ResponseOrderBase]:
     """
     Формирует объекты схемы для заказов пользователя.
 
@@ -132,12 +136,17 @@ def place_an_order(user_id, connection):
 
         items = get_items_from_active_cart(cart_id, connection)
 
-        books_id = [item[3] for item in items]  # Список id, по которым будут искаться книги.
+        books_id = [
+            item[3] for item in items
+        ]  # Список id, по которым будут искаться книги.
 
         number_of_books_in_cart = [item[2] for item in items]
 
-        check_enough_books_to_place_an_order(items, books_id, connection)  # Если книг на складе не хватает, то заказ не создается
+        check_enough_books_to_place_an_order(
+            items, books_id, connection
+        )  # Если книг на складе не хватает, то заказ не создается
 
+        sleep(40)
         total_amount = sum([item[1] for item in items])
 
         save_order_to_db(user_id, cart_id, total_amount, connection)
@@ -187,6 +196,7 @@ def save_order_to_db(user_id: int, cart_id: int, total_amount: float, connection
     )
 
     return None
+
 
 def check_enough_books_to_place_an_order(cart_items_data, books_id, connection):
     """

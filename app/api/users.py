@@ -15,6 +15,7 @@ from app.schemes.users import (
     LoginUserSchema,
 )
 from dependencies import get_connection, get_user_id_from_access_token
+from session import redis_client
 
 router = APIRouter()
 
