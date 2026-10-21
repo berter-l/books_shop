@@ -12,6 +12,7 @@ class ResponseOrderBase(BaseModel):
     created_at: datetime
     status: str
     total_amount: float
+    user_id: int
 
 
 class ResponseOrderDetailSchema(ResponseOrderBase):

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from app.schemes.books import ResponseOneBookSchema, CreateBooksSchema
-from app.services.books import (
+from ..schemes.books import ResponseOneBookSchema, CreateBooksSchema
+from ..services.books import (
     get_processed_books_data,
     create_book as service_create_book,
 )

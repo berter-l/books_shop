@@ -1,6 +1,6 @@
 FROM python:3.11-alpine
 
-WORKDIR /app
+WORKDIR celery_beat_app
 
 COPY requirements.txt .
 
@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python3", "main.py"]
+CMD ["celery", "-A", "celery_beat_tasks:main_celery_app"]

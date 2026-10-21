@@ -2,7 +2,8 @@ services:
 
   main_app:
     build:
-      context: .
+      context: main_app/
+      dockerfile: Dockerfile
     image: main_app_image
     depends_on:
       postgres:
@@ -38,6 +39,65 @@ services:
       timeout: 3s
       retries: 5
 
+  celery_beat:
+    build:
+      context: celery_beat_app/
+      dockerfile: Dockerfile_celery_beat
+
+    image: celery_beat
+    container_name: celery_beat
+    command: celery -A celery_beat_tasks:main_celery_app beat --loglevel=info
+    depends_on:
+      main_app:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  # Контейнер для обработки периодических задач.
+  celery_workers_for_interval_tasks:
+    build:
+      context: celery_beat_app/
+      dockerfile: Dockerfile_celery_beat
+
+    image: celery_workers_for_interval_tasks
+    container_name: celery_workers_for_interval_tasks
+    command: celery -A celery_beat_tasks:main_celery_app worker -Q expired_tokens
+    depends_on:
+      main_app:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  # контейнер для отправки писем.
+  celery_email_workers:
+    build:
+      context: email_app/
+      dockerfile: Dockerfile_celery_email
+    image: celery_email_workers
+    command: celery -A celery_email_tasks worker -Q emails
+    container_name: celery_email_workers
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      main_app:
+        condition: service_started
+
+
+  rabbitmq:
+    image: rabbitmq:4.0.9-management
+    ports:
+      - "15672:15672"
+    container_name: rabbitmq
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      timeout: 3s
+      interval: 5s
+      retries: 5
+
+
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq:

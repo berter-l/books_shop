@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 
-from app.schemes.authors import (
+from ..schemes.authors import (
     AuthorRegistrationSchema,
     ResponseAuthorsSchema,
     AuthorWithBooksSchema,
     LoginAuthorsSchema,
 )
-from app.schemes.jwt import ResponseJWTTokensSchema
-from app.services.authors import (
+from ..schemes.jwt import ResponseJWTTokensSchema
+from ..services.authors import (
     get_processed_authors_data,
     register_author as service_register_author,
     get_processed_author_with_books as service_get_author_with_books,

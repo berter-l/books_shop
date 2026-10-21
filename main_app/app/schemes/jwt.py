@@ -13,3 +13,7 @@ class UpdateAccessTokenSchema(BaseModel):
 class AddToBlackListTokensSchema(BaseModel):
     access_token: str
     refresh_token: str
+
+
+class AddToBlackListJWTTokensSchema(ResponseJWTTokensSchema):
+    pass

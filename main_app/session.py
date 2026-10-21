@@ -1,6 +1,12 @@
 from redis import Redis
+from app.config.main_config import settings
 
-redis_client = Redis(host="shop-redis", port=6379, db=0, decode_responses=True)
+REDIS_HOST = settings.redis_config.host
+
+REDIS_PORT = settings.redis_config.port
+
+
+redis_client = Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
 
 
 def get_value_from_cache_by_token(token: str):

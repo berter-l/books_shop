@@ -1,5 +1,3 @@
-from multiprocessing import connection
-
 from fastapi import HTTPException
 from psycopg import errors
 from starlette import status

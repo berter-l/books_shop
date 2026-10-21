@@ -1,13 +1,16 @@
 from fastapi import HTTPException
 from starlette import status
 
-from app.schemes.authors import (
+from ..schemes.authors import (
     ResponseOneAuthorSchema,
     ResponseAuthorsSchema,
     AuthorWithBooksSchema,
 )
-from app.schemes.jwt import ResponseJWTTokensSchema
-from app.services.books import get_books_by_author_id, build_books_data_response
+from ..schemes.jwt import ResponseJWTTokensSchema
+from ..services.books import (
+    get_books_by_author_id,
+    build_books_data_response,
+)
 from database import pool
 from handler import handle_not_found, handle_unique
 from security import get_hashed_password, get_jwt_tokens, is_password_correct

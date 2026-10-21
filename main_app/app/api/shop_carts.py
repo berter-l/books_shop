@@ -2,8 +2,11 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.responses import Response
 
-from app.schemes.shop_carts import ResponseShopCartSchema
-from app.services.shop_carts import add_product_to_cart, get_processed_user_active_cart
+from ..schemes.shop_carts import ResponseShopCartSchema
+from ..services.shop_carts import (
+    add_product_to_cart,
+    get_processed_user_active_cart,
+)
 from dependencies import get_user_id_from_access_token, get_connection
 
 router = APIRouter()

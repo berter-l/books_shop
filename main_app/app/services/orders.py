@@ -17,6 +17,10 @@ from app.services.shop_carts import (
     is_cart_exists,
     update_cart_status,
 )
+from app.services.users import (
+    check_if_enough_money_in_the_account_balance,
+    update_balance,
+)
 from database import pool
 from handler import handle_not_found
 
@@ -37,7 +41,7 @@ def get_raw_orders_by_user_id(user_id, connection, auto_return_to_pool=True):
     """
 
     raw_orders_data = connection.execute(
-        """SELECT id, total_amount, created_at, status FROM orders WHERE user_id = %s""",
+        """SELECT id, total_amount, created_at, status, user_id FROM orders WHERE user_id = %s""",
         (user_id,),
     ).fetchall()
 
@@ -98,6 +102,7 @@ def build_user_orders_data_response(
                 created_at=raw_order[2],
                 status=raw_order[3],
                 total_amount=raw_order[1],
+                user_id=raw_order[4],
             )
         )
 
@@ -136,6 +141,10 @@ def place_an_order(user_id, connection):
 
         items = get_items_from_active_cart(cart_id, connection)
 
+        total_amount = sum([item[1] for item in items])
+
+        check_if_enough_money_in_the_account_balance(total_amount, user_id, connection)
+
         books_id = [
             item[3] for item in items
         ]  # Список id, по которым будут искаться книги.
@@ -146,10 +155,9 @@ def place_an_order(user_id, connection):
             items, books_id, connection
         )  # Если книг на складе не хватает, то заказ не создается
 
-        sleep(40)
-        total_amount = sum([item[1] for item in items])
-
         save_order_to_db(user_id, cart_id, total_amount, connection)
+
+        update_balance(total_amount, user_id, connection, is_top_up=False)
 
         update_data_number_of_books_in_stock(
             books_id, number_of_books_in_cart, connection
@@ -164,6 +172,7 @@ def place_an_order(user_id, connection):
         raise
 
     except:
+        raise
         connection.execute("""ROLLBACK""")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -172,7 +181,6 @@ def place_an_order(user_id, connection):
 
     finally:
         pool.putconn(connection)
-        return None
 
 
 def save_order_to_db(user_id: int, cart_id: int, total_amount: float, connection):
@@ -235,3 +243,26 @@ def check_enough_books_to_place_an_order(cart_items_data, books_id, connection):
         )
 
     return None
+
+
+def get_raw_orders(connection):
+    """
+    Возвращает все необработанные записи с заказами пользователей из БД.
+
+    Возвращает соединение обратно в пул.
+
+    Args:
+        connection: объект соединения для работы с БД.
+
+    Returns:
+        - list[tuple], где каждый tuple представляет одну необработанную запись из БД, если заказы существуют.
+        - None, если заказы не существуют.
+    """
+
+    raw_orders = connection.execute(
+        """SELECT id, total_amount, created_at, status, user_id FROM orders"""
+    ).fetchall()
+
+    pool.putconn(connection)
+
+    return raw_orders
