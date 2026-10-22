@@ -315,7 +315,7 @@ def check_if_enough_money_in_the_account_balance(
     ).fetchone()[0]
 
     if user_balance < amount:
-        print("ssss")
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect balance"
         )
